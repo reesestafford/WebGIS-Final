@@ -1,0 +1,317 @@
+<!DOCTYPE html> 
+
+<html lang="en"> 
+
+<head> 
+
+  <meta charset="UTF-8" /> 
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+
+  <title>My Web GIS Map</title> 
+
+  
+
+  <!-- ============================================================ 
+
+       Leaflet CSS 
+
+       Loads the Leaflet map styles from the internet (CDN). 
+
+       Do not change this URL. 
+
+  ============================================================ --> 
+
+  <link 
+
+    rel="stylesheet" 
+
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+
+  /> 
+
+  
+
+  <!-- ============================================================ 
+
+       Page Styles 
+
+       All visual styling for the page lives here. 
+
+  ============================================================ --> 
+
+  <style> 
+
+    /* Remove default browser margin and padding */ 
+
+    * { 
+
+      margin: 0; 
+
+      padding: 0; 
+
+      box-sizing: border-box; 
+
+    } 
+
+  
+
+    body { 
+
+      font-family: Arial, sans-serif; 
+
+      background-color: #f4f4f4; 
+
+    } 
+
+  
+
+    /* Top header banner */ 
+
+    #header { 
+
+      background-color: #1F4E79; 
+
+      color: white; 
+
+      padding: 14px 20px; 
+
+      font-size: 20px; 
+
+      font-weight: bold; 
+
+    } 
+
+  
+
+    /* Map container. 
+
+       IMPORTANT: The map div MUST have an explicit height. 
+
+       Without this the map will be 0px tall and invisible. */ 
+
+    #map { 
+
+      height: calc(100vh - 56px); /* full window height minus header */ 
+
+      width: 100%; 
+
+    } 
+
+  </style> 
+
+</head> 
+
+  
+
+<body> 
+
+  
+
+  <!-- Page header banner --> 
+
+  <div id="header">&#128506;&#65039;  My Web GIS Map &mdash; GIS 5220/420</div> 
+
+  
+
+  <!-- Map container. 
+
+       Leaflet will draw the interactive map inside this div. 
+
+       The id="map" must match the id used in the JavaScript below. --> 
+
+  <div id="map"></div> 
+
+  
+
+  <!-- ============================================================ 
+
+       Leaflet JavaScript Library 
+
+       Loads the Leaflet code from the internet (CDN). 
+
+       This MUST come before the custom script below. 
+
+       Do not change this URL. 
+
+  ============================================================ --> 
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> 
+
+  
+
+  <!-- ============================================================ 
+
+       Custom Map Script 
+
+       All of your map code lives here, inside this <script> tag. 
+
+       No separate .js file is needed. 
+
+  ============================================================ --> 
+
+  <script> 
+
+  
+
+    // ---------------------------------------------------------- 
+
+    // STEP 1: Initialize the map 
+
+    // L.map("map") targets the <div id="map"> above. 
+
+    // setView([latitude, longitude], zoomLevel) 
+
+    // Coordinates 39.5, -98.35 center the map on the United States. 
+
+    // ---------------------------------------------------------- 
+
+    const map = L.map("map").setView([39.5, -98.35], 4); 
+
+  
+
+    // ---------------------------------------------------------- 
+
+    // STEP 2: Add a basemap tile layer 
+
+    // This loads map tiles from OpenStreetMap servers. 
+
+    // {s}, {z}, {x}, {y} are placeholders Leaflet fills automatically. 
+
+    // ---------------------------------------------------------- 
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
+
+      attribution: 
+
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', 
+
+      maxZoom: 19, 
+
+    }).addTo(map); 
+
+  
+
+    // ---------------------------------------------------------- 
+
+    // STEP 3: Load GeoJSON data from data.geojson 
+
+    // fetch() requests the file using a relative path. 
+
+    // "data.geojson" means: look for the file in the same folder 
+
+    // as index.html. 
+
+    // ---------------------------------------------------------- 
+
+    fetch("data.geojson") 
+
+      .then(function (response) { 
+
+        // Check the file was found (HTTP status 200) 
+
+        if (!response.ok) { 
+
+          throw new Error( 
+
+            "Could not load data.geojson. Status: " + response.status 
+
+          ); 
+
+        } 
+
+        return response.json(); // parse the file as JSON 
+
+      }) 
+
+      .then(function (geojsonData) { 
+
+  
+
+        // Add the GeoJSON features to the map 
+
+        L.geoJSON(geojsonData, { 
+
+  
+
+          // Style polygons and lines 
+
+          style: function (feature) { 
+
+            return { 
+
+              color: "#1F4E79",     // border / stroke color 
+
+              weight: 2,            // border thickness in pixels 
+
+              fillColor: "#4A90D9", // fill color 
+
+              fillOpacity: 0.4,     // 0 = fully transparent, 1 = solid 
+
+            }; 
+
+          }, 
+
+  
+
+          // Attach a popup to every feature 
+
+          onEachFeature: function (feature, layer) { 
+
+            if (feature.properties) { 
+
+              // Build popup HTML from all feature properties 
+
+              let content = "<b>Feature Details</b><br>"; 
+
+              for (let key in feature.properties) { 
+
+                content += 
+
+                  "<b>" + key + ":</b> " + 
+
+                  feature.properties[key] + "<br>"; 
+
+              } 
+
+              layer.bindPopup(content); 
+
+            } 
+
+          }, 
+
+  
+
+        }).addTo(map); 
+
+      }) 
+
+      .catch(function (error) { 
+
+        // If loading fails, print the error to the browser console. 
+
+        // Open DevTools (F12) -> Console tab to see this message. 
+
+        console.error("Error loading GeoJSON:", error); 
+
+      }); 
+
+  
+
+    // ---------------------------------------------------------- 
+
+    // STEP 4: Add a scale bar 
+
+    // Displays both metric and imperial units in the bottom-left. 
+
+    // ---------------------------------------------------------- 
+
+    L.control.scale({ imperial: true, metric: true }).addTo(map); 
+
+  
+
+  </script> 
+
+</body> 
+
+</html> 
